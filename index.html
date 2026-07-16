@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Generate interactive study quizzes from any PDF document using advanced AI." />
+  <title>QuizCraft AI - AI Quiz Generator from PDF</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <!-- Background Glow Orbs -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <div id="app">
+    <div class="app-layout">
+
+      <!-- Sidebar Navigation & Status Console -->
+      <aside class="side-panel glass">
+        <div class="brand-section">
+          <span class="brand-icon">⚡</span>
+          <h1 class="brand-title">Quiz<span>Craft AI</span></h1>
+        </div>
+
+        <!-- Document Inspector Card -->
+        <div id="inspector-card" class="inspector-card empty">
+          <div class="inspector-header">
+            <span class="inspector-indicator"></span>
+            <span class="inspector-title-label">Source Inspector</span>
+          </div>
+          <div class="inspector-body">
+            <div id="inspector-icon" class="inspector-icon-wrapper">📄</div>
+            <div class="inspector-meta">
+              <h4 id="inspector-filename" class="inspector-filename">No Source Loaded</h4>
+              <span id="inspector-filesize" class="inspector-filesize">Upload a file to begin</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progressive Step Tracker -->
+        <div class="step-tracker">
+          <h3 class="tracker-title">Session Progress</h3>
+          <ul class="tracker-steps">
+            <li id="tracker-step-upload" class="active">
+              <span class="step-number">1</span>
+              <span class="step-label">Upload & Config</span>
+            </li>
+            <li id="tracker-step-generating">
+              <span class="step-number">2</span>
+              <span class="step-label">AI Generation</span>
+            </li>
+            <li id="tracker-step-quiz">
+              <span class="step-number">3</span>
+              <span class="step-label">Active Quiz</span>
+            </li>
+            <li id="tracker-step-results">
+              <span class="step-number">4</span>
+              <span class="step-label">Performance Review</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Sidebar Status Widget (Active Timer/Score details) -->
+        <div id="sidebar-status-widget" class="sidebar-widget hidden">
+          <h3 class="widget-title">Quiz Session</h3>
+          <div class="widget-metrics">
+            <div class="widget-metric">
+              <span class="metric-icon">⏱️</span>
+              <div class="metric-info">
+                <span class="metric-label">Elapsed Time</span>
+                <span id="sidebar-timer-text" class="metric-value">00:00</span>
+              </div>
+            </div>
+            <div id="sidebar-score-metric" class="widget-metric hidden">
+              <span class="metric-icon">🎯</span>
+              <div class="metric-info">
+                <span class="metric-label">Current Score</span>
+                <span id="sidebar-score-text" class="metric-value">0/0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-actions"
+          style="padding: 0 1.5rem; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; width: 100%; box-sizing: border-box;">
+          <button id="btn-sidebar-analytics" class="btn-sidebar-action"
+            style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; color: var(--text-white); padding: 0.6rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.85rem; width: 100%;">
+            <span>📊</span> Analytics Hub
+          </button>
+          <button id="btn-theme-toggle" class="btn-sidebar-action"
+            style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; color: var(--text-white); padding: 0.6rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.85rem; width: 100%;">
+            <span id="theme-toggle-icon">🌙</span> <span id="theme-toggle-text">Dark Mode</span>
+          </button>
+        </div>
+
+        <div class="side-panel-footer">
+          <p>Powered by AI & Groq</p>
+        </div>
+      </aside>
+
+      <!-- Main Workspace Area -->
+      <main class="workspace-area">
+
+        <!-- Screen 1: Dashboard / Upload -->
+        <section id="screen-upload" class="active-screen animate-fade-in">
+          <div class="hero-section">
+            <h2 class="hero-title">Turn PDF Materials into Interactive Quizzes</h2>
+            <p class="hero-subtitle">Let advanced AI analyze your study documents, lecture slides, or textbook PDFs to
+              generate smart practice assessments in seconds.</p>
+          </div>
+
+          <div class="grid-layout">
+            <!-- Input Workspace card -->
+            <div class="card glass upload-card">
+
+              <!-- Input Source Tabs -->
+              <div class="source-tabs">
+                <button class="tab-btn active" data-tab="pdf">📄 PDFs</button>
+                <button class="tab-btn" data-tab="text">✍️ Text</button>
+                <button class="tab-btn" data-tab="article">🌐 Article</button>
+                <button class="tab-btn" data-tab="youtube">🎥 YouTube</button>
+                <button class="tab-btn" data-tab="images">🖼️ Images</button>
+              </div>
+
+              <div class="tab-content-wrapper">
+                <!-- PDFs Tab View -->
+                <div class="tab-panel active" id="panel-pdf">
+                  <div id="drop-zone" class="drop-zone">
+                    <input type="file" id="file-input" accept="application/pdf" class="file-input" multiple />
+                    <div class="drop-zone-content">
+                      <div class="upload-icon-wrapper">
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor"
+                          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="17 8 12 3 7 8"></polyline>
+                          <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                      </div>
+                      <h3>Drag & Drop Study PDFs</h3>
+                      <p>or click to browse local files (Multiple allowed)</p>
+                      <span class="file-limits">Supports documents up to 50MB</span>
+                    </div>
+                  </div>
+                  <!-- PDF Files Previews Gallery -->
+                  <div id="pdf-file-list" class="file-preview-list hidden">
+                    <!-- Render dynamic file entries with rendered canvas covers -->
+                  </div>
+                </div>
+
+                <!-- Text Tab View -->
+                <div class="tab-panel" id="panel-text">
+                  <div class="text-editor-container">
+                    <textarea id="text-input-field"
+                      placeholder="Paste your article text, lecture notes, textbook chapters, or transcription content here (min. 50 characters)..."
+                      class="textarea-input"></textarea>
+                    <div class="text-counter-bar">
+                      <span id="text-char-count">0 / 100,000 characters</span>
+                      <span id="text-word-count">0 words</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Article URL Tab View -->
+                <div class="tab-panel" id="panel-article">
+                  <div class="url-input-section">
+                    <p class="section-instruction">Enter the link of a news article, wiki page, or blog post to generate
+                      a quiz from its text content.</p>
+                    <div class="link-input-group">
+                      <input type="url" id="article-url-input"
+                        placeholder="https://en.wikipedia.org/wiki/Artificial_intelligence" class="text-input" />
+                      <button id="btn-fetch-article" class="btn-primary-sm">Fetch Text</button>
+                    </div>
+                    <div id="article-preview-box" class="preview-box hidden">
+                      <div class="preview-badge">SUCCESSFULLY FETCHED</div>
+                      <h4 id="article-title" class="preview-title">Article Title</h4>
+                      <p id="article-snippet" class="preview-snippet">Loading snippet...</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- YouTube Tab View -->
+                <div class="tab-panel" id="panel-youtube">
+                  <div class="url-input-section">
+                    <p class="section-instruction">Paste a YouTube video link to extract subtitles and generate
+                      questions based on the video transcript.</p>
+                    <div class="link-input-group">
+                      <input type="url" id="youtube-url-input" placeholder="https://www.youtube.com/watch?v=VIDEO_ID"
+                        class="text-input" />
+                      <button id="btn-fetch-youtube" class="btn-primary-sm">Get Subtitles</button>
+                    </div>
+                    <div id="youtube-preview-box" class="preview-box hidden">
+                      <div class="preview-badge yt-badge">TRANSCRIPT READY</div>
+                      <div class="yt-preview-content">
+                        <img id="youtube-thumb" src="" alt="Video Thumbnail" class="yt-thumb-img" />
+                        <div class="yt-text-details">
+                          <h4 id="youtube-title" class="preview-title">Video Title</h4>
+                          <p id="youtube-snippet" class="preview-snippet">Fetching transcript lines...</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Images Tab View -->
+                <div class="tab-panel" id="panel-images">
+                  <div id="image-drop-zone" class="drop-zone">
+                    <input type="file" id="image-file-input" accept="image/png, image/jpeg, image/webp"
+                      class="file-input" multiple />
+                    <div class="drop-zone-content">
+                      <div class="upload-icon-wrapper">
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor"
+                          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                          <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                      </div>
+                      <h3>Upload Images of Notes or Slides</h3>
+                      <p>Drag images here or click to browse (PNG, JPG, WebP)</p>
+                      <span class="file-limits">Gemini will read handwriting and text directly</span>
+                    </div>
+                  </div>
+                  <!-- Image Gallery Previews -->
+                  <div id="image-gallery-list" class="image-gallery hidden">
+                    <!-- Render image thumbnails dynamically -->
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Quiz Config -->
+            <div class="card glass config-card">
+              <h3 class="config-title">AI Study Companion</h3>
+
+              <div class="config-group">
+                <label for="select-study-mode" class="config-label">AI Study Feature</label>
+                <select id="select-study-mode" class="select-input">
+                  <optgroup label="Interactive Quizzes">
+                    <option value="quiz-standard" selected>📊 Standard Quiz</option>
+                    <option value="quiz-chapter">📚 Chapter-wise Quiz</option>
+                    <option value="quiz-topic">📖 Topic-wise Quiz</option>
+                  </optgroup>
+                  <optgroup label="🎯 Smart Exam Patterns">
+                    <option value="exam-gtu">🏫 GTU Exam Pattern</option>
+                    <option value="exam-cbse">🏫 CBSE Exam Pattern</option>
+                    <option value="exam-uni">🏫 University Exam Pattern</option>
+                  </optgroup>
+                  <optgroup label="🧠 Bloom's Taxonomy">
+                    <option value="bloom-remember">💡 Bloom: Remember</option>
+                    <option value="bloom-understand">💡 Bloom: Understand</option>
+                    <option value="bloom-apply">💡 Bloom: Apply</option>
+                    <option value="bloom-analyze">💡 Bloom: Analyze</option>
+                    <option value="bloom-evaluate">💡 Bloom: Evaluate</option>
+                    <option value="bloom-create">💡 Bloom: Create</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <div id="config-questions-wrapper" class="config-group">
+                <label for="select-num-questions" class="config-label">
+                  <span id="label-num-items-text">Number of Questions</span>
+                </label>
+                <select id="select-num-questions" class="select-input">
+                  <option value="5" selected>5 Questions</option>
+                  <option value="10">10 Questions</option>
+                  <option value="20">20 Questions</option>
+                  <option value="50">50 Questions</option>
+                  <option value="100">100 Questions</option>
+                </select>
+              </div>
+
+              <div id="config-formats-wrapper" class="config-group">
+                <label for="select-question-type" class="config-label">Question Type</label>
+                <select id="select-question-type" class="select-input">
+                  <option value="mcq" selected>MCQ (Multiple Choice)</option>
+                  <option value="theory">Theory (Descriptive / Written)</option>
+                  <option value="viva">Viva (Oral Q&A)</option>
+                  <option value="mixed">Mixed (Combination of all)</option>
+                </select>
+              </div>
+
+              <div id="config-time-limit-wrapper" class="config-group">
+                <label for="select-time-limit" class="config-label">Time Limit</label>
+                <select id="select-time-limit" class="select-input">
+                  <option value="0" selected>No Limit</option>
+                  <option value="5">5 Minutes</option>
+                  <option value="10">10 Minutes</option>
+                  <option value="15">15 Minutes</option>
+                  <option value="20">20 Minutes</option>
+                  <option value="30">30 Minutes</option>
+                  <option value="45">45 Minutes</option>
+                  <option value="60">60 Minutes</option>
+                </select>
+              </div>
+
+              <div id="config-marks-wrapper" class="config-group">
+                <label for="select-marks" class="config-label">Marks per Question</label>
+                <select id="select-marks" class="select-input">
+                  <option value="1" selected>1 Mark</option>
+                  <option value="2">2 Marks</option>
+                  <option value="3">3 Marks</option>
+                  <option value="5">5 Marks</option>
+                  <option value="10">10 Marks</option>
+                </select>
+              </div>
+
+              <div id="config-difficulty-wrapper" class="config-group">
+                <label for="select-difficulty" class="config-label">Difficulty Level</label>
+                <select id="select-difficulty" class="select-input">
+                  <option value="easy">Easy (Conceptual Recall)</option>
+                  <option value="medium" selected>Medium (Application & Understanding)</option>
+                  <option value="hard">Hard (Critical Analysis & Synthesis)</option>
+                </select>
+              </div>
+
+
+
+              <div class="config-group">
+                <label for="select-language" class="config-label">Quiz Language</label>
+                <select id="select-language" class="select-input">
+                  <option value="English" selected>English</option>
+                  <option value="Spanish">Spanish (Español)</option>
+                  <option value="French">French (Français)</option>
+                  <option value="German">German (Deutsch)</option>
+                  <option value="Hindi">Hindi (हिन्दी)</option>
+                  <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+                </select>
+              </div>
+
+              <button id="btn-generate" class="btn-primary" disabled>
+                <span id="btn-generate-text">Build AI Quiz</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Screen 2: Loading State -->
+        <section id="screen-loading" class="hidden animate-fade-in">
+          <div class="loading-container glass">
+            <div class="loader-visual">
+              <div class="pulse-ring"></div>
+              <div class="pulse-ring-outer"></div>
+              <span class="loader-emoji">🧠</span>
+            </div>
+
+            <h2 class="loading-title">Quiz Generation in Progress</h2>
+            <p id="loading-status" class="loading-subtitle">Extracting text from document...</p>
+
+            <div class="progress-bar-container">
+              <div id="loading-progress" class="progress-bar-fill" style="width: 10%"></div>
+            </div>
+
+            <ul class="loading-steps">
+              <li id="step-pdf" class="active">
+                <span class="step-indicator"></span>
+                Reading and parsing PDF text
+              </li>
+              <li id="step-ai">
+                <span class="step-indicator"></span>
+                Crafting structured questions with Gemini AI
+              </li>
+              <li id="step-render">
+                <span class="step-indicator"></span>
+                Compiling interactive quiz player
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Screen 3: Quiz Active -->
+        <section id="screen-quiz" class="hidden animate-fade-in">
+          <div class="quiz-header-bar glass">
+            <div class="quiz-info-progress">
+              <span id="quiz-question-counter">Question 1 of 5</span>
+              <div class="mini-progress-track">
+                <div id="quiz-progress-fill" class="mini-progress-fill" style="width: 20%"></div>
+              </div>
+            </div>
+            <div class="quiz-timer-header" style="display: flex; gap: 0.75rem; align-items: center;">
+              <button id="btn-quiz-audio" class="btn-icon-audio" title="Read Question Out Loud"
+                style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-high); padding: 0.25rem;">🔊</button>
+              <span class="timer-icon">⏱️</span>
+              <span id="quiz-timer-text">00:00</span>
+            </div>
+          </div>
+
+          <div class="quiz-body">
+            <!-- Question Card -->
+            <div id="question-card" class="card glass question-card animate-slide-up">
+              <h3 id="question-text" class="question-text">Loading question...</h3>
+              <div id="options-container" class="options-container">
+                <!-- Options are loaded dynamically -->
+              </div>
+            </div>
+
+            <!-- Quiz Navigation -->
+            <div class="quiz-nav">
+              <button id="btn-prev-question" class="btn-secondary" disabled>Previous</button>
+              <button id="btn-next-question" class="btn-primary">
+                <span id="btn-next-text">Next Question</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Screen 4: Results & Explanations -->
+        <section id="screen-results" class="hidden animate-fade-in">
+          <div class="results-header glass">
+            <div class="results-score-circle">
+              <svg viewBox="0 0 100 100" class="score-ring">
+                <circle cx="50" cy="50" r="45" class="ring-bg"></circle>
+                <circle cx="50" cy="50" r="45" id="results-ring-fill" class="ring-fill" stroke-dasharray="283"
+                  stroke-dashoffset="283"></circle>
+              </svg>
+              <div class="score-center">
+                <span id="results-score-percent" class="score-percent">0%</span>
+                <span id="results-score-fraction" class="score-fraction">0/0</span>
+              </div>
+            </div>
+
+            <div class="results-meta">
+              <h2 id="results-message" class="results-title">Great Effort!</h2>
+              <p class="results-subtitle">Review your answers and explanations below to improve your understanding of
+                the material.</p>
+
+              <div class="dashboard-grid">
+                <div class="dashboard-card">
+                  <span class="dashboard-val" id="results-metric-total">0</span>
+                  <span class="dashboard-label">Total Questions</span>
+                </div>
+                <div class="dashboard-card correct">
+                  <span class="dashboard-val" id="results-metric-correct">0</span>
+                  <span class="dashboard-label">Correct Answers</span>
+                </div>
+                <div class="dashboard-card wrong">
+                  <span class="dashboard-val" id="results-metric-wrong">0</span>
+                  <span class="dashboard-label">Wrong Answers</span>
+                </div>
+                <div class="dashboard-card unattempted">
+                  <span class="dashboard-val" id="results-metric-unattempted">0</span>
+                  <span class="dashboard-label">Unattempted</span>
+                </div>
+                <div class="dashboard-card percentage">
+                  <span class="dashboard-val" id="results-metric-percentage">0%</span>
+                  <span class="dashboard-label">Percentage</span>
+                </div>
+                <div class="dashboard-card grade">
+                  <span class="dashboard-val" id="results-metric-grade">-</span>
+                  <span class="dashboard-label">Grade</span>
+                </div>
+                <div class="dashboard-card accuracy">
+                  <span class="dashboard-val" id="results-metric-accuracy">0%</span>
+                  <span class="dashboard-label">Accuracy</span>
+                </div>
+                <div class="dashboard-card time">
+                  <span class="dashboard-val" id="results-metric-time">0m 0s</span>
+                  <span class="dashboard-label">Time Taken</span>
+                </div>
+              </div>
+
+              <div class="card glass ai-feedback-card animate-slide-up">
+                <h3 class="feedback-title">
+                  <span class="sparkle-icon">✨</span> AI Performance Insights
+                </h3>
+                <div id="results-ai-feedback-container" class="feedback-container">
+                  <p id="results-ai-feedback-text">Analyzing performance metrics to compile tutoring feedback...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question Review & Explanations -->
+          <div class="review-section">
+            <h3 class="review-title">Detailed Question Review</h3>
+            <div id="review-container" class="review-container">
+              <!-- Dynamically populated review cards -->
+            </div>
+          </div>
+
+          <!-- Bottom Actions -->
+          <div class="results-actions">
+            <button id="btn-restart" class="btn-secondary">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              Generate New Quiz
+            </button>
+            <div class="export-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button id="btn-export-json" class="btn-tertiary">Export JSON</button>
+              <button id="btn-export-quiz-only" class="btn-tertiary"
+                style="border-color: rgba(6, 182, 212, 0.3); color: #22d3ee;">Download Quiz PDF</button>
+              <button id="btn-export-key-only" class="btn-tertiary"
+                style="border-color: rgba(245, 158, 11, 0.3); color: #fbbf24;">Download Answer Key</button>
+              <button id="btn-export-pdf" class="btn-primary">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Export Study Guide PDF
+              </button>
+            </div>
+          </div>
+        </section>
+
+
+
+        <!-- Screen 8: Analytics & Achievements Hub -->
+        <section id="screen-analytics" class="hidden animate-fade-in">
+          <div class="results-header glass">
+            <div class="qa-bank-header-details">
+              <h2 class="results-title">📈 Analytics & Achievements Hub</h2>
+              <p class="results-subtitle">Track your preparation history, streaks, tier levels, and badges.</p>
+            </div>
+          </div>
+
+          <!-- Gamification & Stats Tiers -->
+          <div
+            style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; margin-bottom: 2rem;">
+            <div class="card glass dashboard-card"
+              style="border-color: rgba(245, 158, 11, 0.35); text-align: center; background: rgba(245, 158, 11, 0.02);">
+              <span class="dashboard-val" id="analytics-streak"
+                style="color: #f59e0b; text-shadow: 0 0 10px rgba(245, 158, 11, 0.25);">🔥 0 Days</span>
+              <span class="dashboard-label">Daily Streak</span>
+            </div>
+            <div class="card glass dashboard-card"
+              style="border-color: rgba(139, 92, 246, 0.35); text-align: center; background: rgba(139, 92, 246, 0.02);">
+              <span class="dashboard-val" id="analytics-points"
+                style="color: #8b5cf6; text-shadow: 0 0 10px rgba(139, 92, 246, 0.25);">⭐ 0 pts</span>
+              <span class="dashboard-label">Total Points</span>
+            </div>
+            <div class="card glass dashboard-card"
+              style="border-color: rgba(6, 182, 212, 0.35); text-align: center; background: rgba(6, 182, 212, 0.02);">
+              <span class="dashboard-val" id="analytics-rank"
+                style="color: #06b6d4; text-shadow: 0 0 10px rgba(6, 182, 212, 0.25);">Bronze</span>
+              <span class="dashboard-label">Rank Tier</span>
+            </div>
+          </div>
+
+          <!-- Analytics Graphs / Details Grid -->
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <!-- Progress Graph -->
+            <div class="card glass" style="padding: 1.5rem;">
+              <h3 class="feedback-title" style="margin-top: 0;">📉 Quiz Progress Chart</h3>
+              <div id="analytics-chart-container"
+                style="position: relative; height: 180px; width: 100%; display: flex; align-items: flex-end; gap: 1rem; border-left: 2px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.1); padding: 0.5rem; box-sizing: border-box; margin-top: 1rem;">
+                <div
+                  style="width: 100%; text-align: center; color: var(--text-medium); font-size: 0.9rem; margin-bottom: 4.5rem;">
+                  Take a quiz to see your progress graph!</div>
+              </div>
+            </div>
+            <!-- Strong & Weak Topics -->
+            <div class="card glass" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+              <div>
+                <h4
+                  style="color: #10b981; margin-top: 0; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                  <span style="font-size: 0.6rem;">🟢</span> Strong Topics
+                </h4>
+                <ul id="analytics-strong-list"
+                  style="padding-left: 1.25rem; margin: 0; font-size: 0.85rem; color: var(--text-high); line-height: 1.5;">
+                  <li>None yet</li>
+                </ul>
+              </div>
+              <div>
+                <h4
+                  style="color: #ef4444; margin-top: 0; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                  <span style="font-size: 0.6rem;">🔴</span> Weak Topics
+                </h4>
+                <ul id="analytics-weak-list"
+                  style="padding-left: 1.25rem; margin: 0; font-size: 0.85rem; color: var(--text-high); line-height: 1.5;">
+                  <li>None yet</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badges / Achievement section -->
+          <div class="card glass" style="padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 class="feedback-title" style="margin-top: 0;">🏆 Achievement Tiers</h3>
+            <div id="analytics-badges-container"
+              style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1rem;">
+              <!-- Badges go here -->
+            </div>
+          </div>
+
+          <div class="results-actions" style="margin-bottom: 2rem;">
+            <button id="btn-analytics-exit" class="btn-secondary">Exit to Dashboard</button>
+            <button id="btn-analytics-clear" class="btn-tertiary"
+              style="border-color: rgba(239, 68, 68, 0.3); color: #f87171;">Reset Progress</button>
+          </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+          <p>Generated by advanced AI &bull; Handcrafted using modern Vanilla JS & CSS</p>
+        </footer>
+      </main>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <!-- Main Module script -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
