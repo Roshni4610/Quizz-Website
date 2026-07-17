@@ -147,9 +147,22 @@ class AppState {
     
     // Toast Container
     this.toastContainer = document.getElementById('toast-container');
+
+    // API Key input
+    this.apiKeyInput = document.getElementById('input-api-key');
   }
 
   bindEvents() {
+    // API Key settings input binding
+    if (this.apiKeyInput) {
+      this.apiKeyInput.value = this.apiKey;
+      this.apiKeyInput.addEventListener('input', (e) => {
+        const key = e.target.value.trim();
+        this.apiKey = key;
+        localStorage.setItem('gemini_api_key', key);
+      });
+    }
+
     // 1. Tab switching
     this.tabButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -798,7 +811,7 @@ class AppState {
   // Generates quiz depending on active content tab
   async startQuizGenerationFlow() {
     if (!this.apiKey) {
-      this.showToast('Please set your VITE_GEMINI_API_KEY environment variable in your .env file.', 'error');
+      this.showToast('Please enter your Gemini or Groq API Key in the sidebar input to build a quiz.', 'error');
       return;
     }
 
