@@ -803,7 +803,6 @@ class AppState {
     }
 
     const mode = this.selectStudyMode.value;
-    const detailLevel = this.selectDetailLevel.value;
     const numQuestions = parseInt(this.selectNumQuestions.value, 10);
     const questionType = this.selectQuestionType.value;
     const timeLimitMinutes = parseInt(this.selectTimeLimit.value, 10);
@@ -865,7 +864,6 @@ class AppState {
         difficulty,
         language,
         apiKey: this.apiKey,
-        detailLevel,
         examDate: document.getElementById('input-exam-date')?.value || '',
         studyHours: document.getElementById('input-study-hours')?.value || '2'
       }, imgParts);
